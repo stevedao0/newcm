@@ -374,12 +374,8 @@
   
   /* Modern sidebar */
   .sidebar-modern {
-    background: linear-gradient(180deg, #1e293b 0%, #334155 50%, #1e293b 100%);
-    @apply backdrop-blur-xl;
-  }
-  
-  [data-theme="dark"] .sidebar-modern {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-primary);
   }
   
   .sidebar-item {
@@ -387,17 +383,18 @@
   }
   
   .sidebar-item-active {
-    @apply sidebar-item text-white;
+    color: white !important;
     background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
   }
   
   .sidebar-item-inactive {
-    @apply sidebar-item text-slate-300 hover:text-white;
+    color: var(--text-secondary);
   }
   
   .sidebar-item-inactive:hover {
-    background: rgba(71, 85, 105, 0.5);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
   }
   }
   

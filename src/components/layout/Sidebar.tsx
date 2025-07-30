@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                group
+                group sidebar-item
                 ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}
               `}
             >
@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
                   window.location.pathname === item.path 
                     ? 'bg-white/20 shadow-glow' 
-                    : 'group-hover:bg-secondary-600/50'
+                    : 'group-hover:bg-slate-600/50'
                 }`}>
                   <item.icon className="w-5 h-5" />
                 </div>
@@ -86,8 +86,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           ))}
         </nav>
         
-        <div className="p-4 border-t border-secondary-700/50 bg-gradient-to-r from-secondary-800/50 to-transparent">
-          <div className="flex items-center p-3 rounded-xl bg-secondary-800/50 backdrop-blur-sm">
+        <div 
+          className="p-4 border-t backdrop-blur-sm"
+          style={{
+            borderColor: 'var(--border-primary)',
+            background: 'var(--bg-secondary)'
+          }}
+        >
+          <div 
+            className="flex items-center p-3 rounded-xl backdrop-blur-sm"
+            style={{
+              background: 'var(--bg-tertiary)'
+            }}
+          >
             <div 
               className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{
@@ -98,11 +109,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               <UserCircle className="w-7 h-7 text-white" />
             </div>
             <div className="ml-3 flex-1">
-              <p className="text-sm font-semibold text-white">{user?.fullName}</p>
-              <p className="text-xs text-secondary-300">{user?.email}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.fullName}</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
               <div className="flex items-center mt-1">
                 <div className="w-2 h-2 bg-success-400 rounded-full mr-2"></div>
-                <span className="text-xs text-secondary-400">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                   {user?.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
                 </span>
               </div>
@@ -111,7 +122,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           
           <button 
             onClick={logout}
-            className="mt-4 flex items-center w-full px-4 py-3 text-sm font-medium text-secondary-300 rounded-xl hover:bg-secondary-700/50 hover:text-white transition-all duration-200 group"
+            className="mt-4 flex items-center w-full px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group"
+            style={{
+              color: 'var(--text-secondary)',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
             <div className="w-8 h-8 rounded-lg flex items-center justify-center group-hover:bg-danger-600/20 transition-all duration-200">
               <LogOut className="w-4 h-4" />

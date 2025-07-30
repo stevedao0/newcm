@@ -1,5 +1,3 @@
-import { sqliteService } from './sqliteService';
-
 // Database service with SQLite backend and localStorage fallback
 export interface DatabaseConfig {
   name: string;
@@ -10,6 +8,7 @@ export interface DatabaseConfig {
 class DatabaseService {
   private config: DatabaseConfig;
   private useSQLite: boolean = false;
+  private sqliteService: any = null;
   private syncQueue: any[] = [];
   private listeners: Map<string, Set<() => void>> = new Map();
   private initialized: boolean = false;
@@ -26,8 +25,21 @@ class DatabaseService {
 
   private async checkSQLiteConnection() {
     try {
+      // Check if we're in a Node.js environment
+      const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
+      
+      if (!isNodeEnv) {
+        console.log('⚠️ Browser environment detected, using localStorage fallback');
+        this.useSQLite = false;
+        return;
+      }
+
+      // Dynamically import SQLite service only in Node.js environment
+      const { sqliteService } = await import('./sqliteService');
+      this.sqliteService = sqliteService;
+      
       // Test SQLite connection
-      if (sqliteService.isHealthy()) {
+      if (this.sqliteService.isHealthy()) {
         this.useSQLite = true;
         console.log('✅ Connected to SQLite database');
         
@@ -39,7 +51,7 @@ class DatabaseService {
         
         if (hasLocalData) {
           console.log('🔄 Found localStorage data, migrating to SQLite...');
-          await sqliteService.migrateFromLocalStorage();
+          await this.sqliteService.migrateFromLocalStorage();
           console.log('✅ Migration completed');
         }
       } else {
@@ -138,9 +150,9 @@ class DatabaseService {
 
   // CRUD operations with proper notifications
   async create(table: string, data: any): Promise<any> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        const result = await sqliteService.create(table, data);
+        const result = await this.sqliteService.create(table, data);
         this.notifyListeners(table);
         return result;
       } catch (error) {
@@ -201,9 +213,9 @@ class DatabaseService {
   }
 
   async getAllAsync(table: string): Promise<any[]> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        return await sqliteService.getAll(table);
+        return await this.sqliteService.getAll(table);
       } catch (error) {
         console.error('SQLite getAll error, falling back to localStorage:', error);
         // Fall back to localStorage
@@ -224,9 +236,9 @@ class DatabaseService {
   }
 
   async update(table: string, id: string, data: any): Promise<any> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        const result = await sqliteService.update(table, id, data);
+        const result = await this.sqliteService.update(table, id, data);
         this.notifyListeners(table);
         return result;
       } catch (error) {
@@ -269,9 +281,9 @@ class DatabaseService {
   }
 
   async delete(table: string, id: string): Promise<boolean> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        await sqliteService.delete(table, id);
+        await this.sqliteService.delete(table, id);
         this.notifyListeners(table);
         return true;
       } catch (error) {
@@ -308,9 +320,9 @@ class DatabaseService {
 
   // Bulk operations for import - ENHANCED
   async bulkCreate(table: string, items: any[]): Promise<any[]> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        const result = await sqliteService.bulkCreate(table, items);
+        const result = await this.sqliteService.bulkCreate(table, items);
         this.notifyListeners(table);
         return result;
       } catch (error) {
@@ -407,8 +419,8 @@ class DatabaseService {
 
   // Statistics
   getStats(): Record<string, number> {
-    if (this.useSQLite) {
-      return sqliteService.getStats();
+    if (this.useSQLite && this.sqliteService) {
+      return this.sqliteService.getStats();
     }
     
     const stats: Record<string, number> = {};
@@ -421,9 +433,9 @@ class DatabaseService {
   }
 
   async getStatsAsync(): Promise<Record<string, number>> {
-    if (this.useSQLite) {
+    if (this.useSQLite && this.sqliteService) {
       try {
-        return sqliteService.getStats();
+        return this.sqliteService.getStats();
       } catch (error) {
         console.error('SQLite getStats error, falling back to localStorage:', error);
         // Fall back to localStorage
@@ -435,8 +447,8 @@ class DatabaseService {
 
   // Health check
   isHealthy(): boolean {
-    if (this.useSQLite) {
-      return sqliteService.isHealthy();
+    if (this.useSQLite && this.sqliteService) {
+      return this.sqliteService.isHealthy();
     }
     return this.initialized && typeof Storage !== 'undefined';
   }

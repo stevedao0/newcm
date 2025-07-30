@@ -255,7 +255,7 @@ const ImportData: React.FC = () => {
             ngayKetThuc: formatDate(row['Ngày kết thúc'] || row['Ngay ket thuc'] || ''),
             thoiGian: row['Thời gian'] || row['Thoi gian'] || '',
             thoiLuong: row['Thời lượng'] || row['Thoi luong'] || '',
-            hinhThuc: row['Hình thức'] || row['Hinh thuc'] || '',
+            hinhThuc: row['Hình thức'] || row['Hinh thuc'] || row['Hình thức'] || row['Hinh Thuc'] || row['HINH THUC'] || row['Video/Audio'] || row['Loại'] || '',
             mucNhuanBut: row['Mức nhuận bút'] || row['Muc nhuan but'] || '0',
             ghiChu1: row['Ghi chú 1'] || row['Ghi chu 1'] || '',
             ghiChu2: row['Ghi chú 2'] || row['Ghi chu 2'] || '',

@@ -43,24 +43,24 @@
   body {
     font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   * {
-    border-color: var(--border-primary);
+    border-color: var(--border-primary) !important;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
   
   p {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     line-height: 1.6;
   }
   
@@ -79,9 +79,10 @@
 @layer components {
   /* Modern card system */
   .card-modern {
-    background: var(--bg-primary);
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
     @apply rounded-2xl border overflow-hidden transition-all duration-300;
-    border-color: var(--border-primary);
+    border-color: var(--border-primary) !important;
     box-shadow: 0 2px 15px -3px var(--shadow-color), 0 10px 20px -2px var(--shadow-color);
   }
   
@@ -170,20 +171,20 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
   }
   
   .card-details {
     flex: 1;
     font-size: 0.8rem;
     margin-bottom: 1rem;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
   }
   
   .card-footer {
     margin-top: auto;
     padding-top: 0.75rem;
-    border-top: 1px solid var(--border-primary);
+    border-top: 1px solid var(--border-primary) !important;
   }
   
   /* Modern buttons */
@@ -204,14 +205,14 @@
   
   .btn-secondary {
     @apply btn-modern border focus:ring-2 focus:ring-orange-500;
-    background: var(--bg-primary);
-    color: var(--text-secondary);
-    border-color: var(--border-secondary);
+    background: var(--bg-primary) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-secondary) !important;
     box-shadow: 0 2px 15px -3px var(--shadow-color);
   }
   
   .btn-secondary:hover {
-    background: var(--bg-tertiary);
+    background: var(--bg-tertiary) !important;
     box-shadow: 0 4px 25px -5px var(--shadow-color);
   }
   
@@ -236,22 +237,22 @@
   /* Modern inputs */
   .input-modern {
     @apply w-full px-4 py-3 text-sm border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    border-color: var(--border-secondary);
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-secondary) !important;
   }
   
   .input-modern:focus {
-    border-color: var(--accent-primary);
+    border-color: var(--accent-primary) !important;
     box-shadow: 0 0 20px rgba(251, 146, 60, 0.15);
   }
   
   .input-modern:hover {
-    border-color: var(--border-primary);
+    border-color: var(--border-primary) !important;
   }
   
   .input-modern::placeholder {
-    color: var(--text-tertiary);
+    color: var(--text-tertiary) !important;
   }
   
   /* Modern select */
@@ -295,23 +296,23 @@
   /* Modern tables */
   .table-modern {
     @apply w-full rounded-2xl overflow-hidden;
-    background: var(--bg-primary);
+    background: var(--bg-primary) !important;
     box-shadow: 0 2px 15px -3px var(--shadow-color);
   }
   
   .table-modern thead {
-    background: var(--bg-tertiary);
+    background: var(--bg-tertiary) !important;
   }
   
   .table-modern th {
     @apply px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
   }
   
   .table-modern td {
     @apply px-6 py-4 text-sm border-t;
-    color: var(--text-primary);
-    border-color: var(--border-primary);
+    color: var(--text-primary) !important;
+    border-color: var(--border-primary) !important;
   }
   
   .table-modern tbody tr {
@@ -319,14 +320,15 @@
   }
   
   .table-modern tbody tr:hover {
-    background: var(--bg-tertiary);
+    background: var(--bg-tertiary) !important;
   }
   
   /* Modern modals */
   .modal-modern {
     @apply rounded-3xl border overflow-hidden backdrop-blur-sm;
-    background: var(--bg-primary);
-    border-color: var(--border-primary);
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-primary) !important;
     box-shadow: 0 10px 40px -10px var(--shadow-color), 0 20px 25px -5px var(--shadow-color);
   }
   
@@ -374,12 +376,13 @@
   
   /* Modern sidebar */
   .sidebar-modern {
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--border-primary);
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-primary) !important;
   }
   
   .sidebar-item {
     @apply flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200;
+    color: var(--text-secondary) !important;
   }
   
   .sidebar-item-active {
@@ -389,12 +392,12 @@
   }
   
   .sidebar-item-inactive {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
   }
   
   .sidebar-item-inactive:hover {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
   }
   }
   

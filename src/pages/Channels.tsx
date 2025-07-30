@@ -583,12 +583,25 @@ const Channels: React.FC = () => {
       {/* Channels Table View */}
       {viewMode === 'table' && (
         <Card>
-          <div className="overflow-x-auto">
+          <div 
+            className="overflow-x-auto"
+            style={{
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)'
+            }}
+          >
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead 
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)'
+                }}
+              >
                 <tr>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
                     onClick={() => handleSort('tenKenh')}
                   >
                     <div className="flex items-center space-x-1">
@@ -597,7 +610,10 @@ const Channels: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
                     onClick={() => handleSort('platform')}
                   >
                     <div className="flex items-center space-x-1">
@@ -606,7 +622,10 @@ const Channels: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
                     onClick={() => handleSort('nguoiPhuTrach')}
                   >
                     <div className="flex items-center space-x-1">
@@ -614,11 +633,19 @@ const Channels: React.FC = () => {
                       {getSortIcon('nguoiPhuTrach')}
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
                     Thống kê
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
                     onClick={() => handleSort('ngayTao')}
                   >
                     <div className="flex items-center space-x-1">
@@ -627,7 +654,10 @@ const Channels: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
                     onClick={() => handleSort('trangThai')}
                   >
                     <div className="flex items-center space-x-1">
@@ -635,45 +665,111 @@ const Channels: React.FC = () => {
                       {getSortIcon('trangThai')}
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody 
+                className="divide-y"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  borderColor: 'var(--border-primary)'
+                }}
+              >
                 {filteredAndSortedChannels.map((channel) => (
-                  <tr key={channel.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => handleViewChannel(channel)}>
+                  <tr 
+                    key={channel.id} 
+                    className="cursor-pointer transition-colors"
+                    style={{
+                      color: 'var(--text-primary)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                    onClick={() => handleViewChannel(channel)}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                          style={{
+                            backgroundColor: 'var(--bg-tertiary)'
+                          }}
+                        >
                           {getPlatformIcon(channel.platform)}
                         </div>
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-slate-900">{channel.tenKenh}</div>
-                          <div className="text-xs text-slate-500 font-mono">{channel.idKenh}</div>
+                          <div 
+                            className="text-sm font-medium"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {channel.tenKenh}
+                          </div>
+                          <div 
+                            className="text-xs font-mono"
+                            style={{ color: 'var(--text-tertiary)' }}
+                          >
+                            {channel.idKenh}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {getPlatformIcon(channel.platform)}
-                        <span className="ml-2 text-sm text-slate-600">{channel.platform}</span>
+                        <span 
+                          className="ml-2 text-sm"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          {channel.platform}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{channel.nguoiPhuTrach}</td>
+                    <td 
+                      className="px-6 py-4 text-sm"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      {channel.nguoiPhuTrach}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Users className="w-4 h-4 mr-2 text-slate-400" />
+                        <div 
+                          className="flex items-center text-sm"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          <Users 
+                            className="w-4 h-4 mr-2"
+                            style={{ color: 'var(--text-tertiary)' }}
+                          />
                           <span>{channel.subscribers?.toLocaleString() || 'N/A'}</span>
                         </div>
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Play className="w-4 h-4 mr-2 text-slate-400" />
+                        <div 
+                          className="flex items-center text-sm"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          <Play 
+                            className="w-4 h-4 mr-2"
+                            style={{ color: 'var(--text-tertiary)' }}
+                          />
                           <span>{channel.views?.toLocaleString() || 'N/A'}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{channel.ngayTao}</td>
+                    <td 
+                      className="px-6 py-4 text-sm"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      {channel.ngayTao}
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                         channel.trangThai === 'Hoạt động' ? 'bg-green-100 text-green-800' :

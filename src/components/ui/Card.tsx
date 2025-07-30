@@ -14,7 +14,7 @@ const Card: React.FC<CardProps> = ({
   hover = false 
 }) => {
   const variantClasses = {
-    default: 'bg-white rounded-xl shadow-sm border border-slate-200',
+    default: 'rounded-xl shadow-sm border',
     modern: 'card-modern',
     interactive: 'card-interactive'
   };
@@ -23,7 +23,14 @@ const Card: React.FC<CardProps> = ({
   const hoverClasses = hover ? 'hover-lift' : '';
   
   return (
-    <div className={`${baseClasses} ${hoverClasses} overflow-hidden ${className}`}>
+    <div 
+      className={`${baseClasses} ${hoverClasses} overflow-hidden ${className}`}
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
+        borderColor: 'var(--border-primary)'
+      }}
+    >
       {children}
     </div>
   );
@@ -31,7 +38,14 @@ const Card: React.FC<CardProps> = ({
 
 export const CardHeader: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-6 py-5 border-b border-secondary-200 bg-gradient-to-r from-secondary-50/50 to-white ${className}`}>
+    <div 
+      className={`px-6 py-5 border-b ${className}`}
+      style={{
+        borderColor: 'var(--border-primary)',
+        backgroundColor: 'var(--bg-tertiary)',
+        color: 'var(--text-primary)'
+      }}
+    >
       {children}
     </div>
   );
@@ -39,7 +53,13 @@ export const CardHeader: React.FC<CardProps> = ({ children, className = '' }) =>
 
 export const CardContent: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-6 py-5 ${className}`}>
+    <div 
+      className={`px-6 py-5 ${className}`}
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-primary)'
+      }}
+    >
       {children}
     </div>
   );
@@ -47,7 +67,14 @@ export const CardContent: React.FC<CardProps> = ({ children, className = '' }) =
 
 export const CardFooter: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-6 py-5 border-t border-secondary-200 bg-gradient-to-r from-white to-secondary-50/50 ${className}`}>
+    <div 
+      className={`px-6 py-5 border-t ${className}`}
+      style={{
+        borderColor: 'var(--border-primary)',
+        backgroundColor: 'var(--bg-tertiary)',
+        color: 'var(--text-primary)'
+      }}
+    >
       {children}
     </div>
   );

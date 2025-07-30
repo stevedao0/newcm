@@ -1,6 +1,6 @@
 import { sqliteService } from './sqliteService';
 
-// Database service with Supabase backend and localStorage fallback
+// Database service with SQLite backend and localStorage fallback
 export interface DatabaseConfig {
   name: string;
   version: number;

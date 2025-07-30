@@ -126,8 +126,8 @@ const Contracts: React.FC = () => {
         const matchesResponsible = responsibleFilter === 'all' || contract.nguoiPhuTrach === responsibleFilter;
         
         const matchesFilters = 
-          (!filters.startDate || new Date(contract.ngayKy.split('/').reverse().join('-')) >= new Date(filters.startDate)) &&
-          (!filters.endDate || new Date(contract.ngayKy.split('/').reverse().join('-')) <= new Date(filters.endDate)) &&
+          (!filters.startDate || new Date(formatDate(contract.ngayKy).split('/').reverse().join('-')) >= new Date(filters.startDate)) &&
+          (!filters.endDate || new Date(formatDate(contract.ngayKy).split('/').reverse().join('-')) <= new Date(filters.endDate)) &&
           (!filters.minAmount || parseInt(contract.mucNhuanBut.replace(/,/g, '')) >= parseInt(filters.minAmount)) &&
           (!filters.maxAmount || parseInt(contract.mucNhuanBut.replace(/,/g, '')) <= parseInt(filters.maxAmount));
 

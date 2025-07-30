@@ -1087,7 +1087,7 @@ const Channels: React.FC = () => {
                   type="date"
                   name="ngayTao"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedChannel?.ngayTao ? selectedChannel.ngayTao.split('/').reverse().join('-') : ''}
+                  defaultValue={selectedChannel?.ngayTao ? formatDate(selectedChannel.ngayTao).split('/').reverse().join('-') : ''}
                   required
                 />
               </div>

@@ -16,6 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { contractsData } from '../data/contracts';
 import { channelsData } from '../data/channels';
 import { partnersData } from '../data/partners';
+import { formatDate } from '../utils/formatUtils';
 
 const Dashboard: React.FC = () => {
   // Calculate statistics

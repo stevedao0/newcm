@@ -63,6 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
+                group
                 ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}
               `}
             >

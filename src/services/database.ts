@@ -1,4 +1,6 @@
-// Enhanced localStorage-based database service - FULLY PORTABLE
+import { supabaseService } from './supabaseService';
+
+// Database service with Supabase backend and localStorage fallback
 export interface DatabaseConfig {
   name: string;
   version: number;
@@ -7,7 +9,7 @@ export interface DatabaseConfig {
 
 class DatabaseService {
   private config: DatabaseConfig;
-  private isOnline: boolean = true;
+  private useSupabase: boolean = false;
   private syncQueue: any[] = [];
   private listeners: Map<string, Set<() => void>> = new Map();
   private initialized: boolean = false;
@@ -19,7 +21,40 @@ class DatabaseService {
       tables: ['contracts', 'works', 'partners', 'channels', 'users', 'notifications']
     };
     this.initializeDatabase();
-    this.setupNetworkDetection();
+    this.checkSupabaseConnection();
+  }
+
+  private async checkSupabaseConnection() {
+    try {
+      // Check if Supabase is configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseKey) {
+        // Test connection
+        await supabaseService.getStats();
+        this.useSupabase = true;
+        console.log('✅ Connected to Supabase database');
+        
+        // Migrate existing localStorage data if any
+        const hasLocalData = this.config.tables.some(table => {
+          const data = localStorage.getItem(table);
+          return data && JSON.parse(data).length > 0;
+        });
+        
+        if (hasLocalData) {
+          console.log('🔄 Found localStorage data, migrating to Supabase...');
+          await supabaseService.migrateFromLocalStorage();
+          console.log('✅ Migration completed');
+        }
+      } else {
+        console.log('⚠️ Supabase not configured, using localStorage fallback');
+        this.useSupabase = false;
+      }
+    } catch (error) {
+      console.warn('⚠️ Supabase connection failed, using localStorage fallback:', error);
+      this.useSupabase = false;
+    }
   }
 
   private initializeDatabase() {
@@ -52,24 +87,6 @@ class DatabaseService {
     return 'device_' + Math.random().toString(36).substr(2, 9);
   }
 
-  private setupNetworkDetection() {
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-      this.processSyncQueue();
-    });
-
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-    });
-  }
-
-  private processSyncQueue() {
-    if (this.isOnline && this.syncQueue.length > 0) {
-      console.log('Processing sync queue:', this.syncQueue.length, 'items');
-      this.syncQueue = [];
-    }
-  }
-
   private notifyListeners(table: string) {
     const tableListeners = this.listeners.get(table);
     if (tableListeners) {
@@ -88,6 +105,10 @@ class DatabaseService {
 
   // Subscribe to table changes - ENHANCED
   subscribe(table: string, callback: () => void) {
+    if (this.useSupabase) {
+      return supabaseService.subscribe(table, callback);
+    }
+    
     if (!this.listeners.has(table)) {
       this.listeners.set(table, new Set());
     }
@@ -107,6 +128,17 @@ class DatabaseService {
 
   // CRUD operations with proper notifications
   async create(table: string, data: any): Promise<any> {
+    if (this.useSupabase) {
+      try {
+        const result = await supabaseService.create(table, data);
+        this.notifyListeners(table);
+        return result;
+      } catch (error) {
+        console.error('Supabase create error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
     if (!this.initialized) {
       throw new Error('Database not initialized');
     }
@@ -125,10 +157,6 @@ class DatabaseService {
       
       console.log(`✅ Created item in ${table}:`, newItem.id);
       
-      if (!this.isOnline) {
-        this.syncQueue.push({ action: 'create', table, data: newItem });
-      }
-      
       // Notify listeners
       this.notifyListeners(table);
       
@@ -140,6 +168,13 @@ class DatabaseService {
   }
 
   getAll(table: string): any[] {
+    if (this.useSupabase) {
+      // For Supabase, we need to use async methods
+      // This method will be deprecated in favor of async getAll
+      console.warn('getAll is synchronous, use getAllAsync for Supabase');
+      return [];
+    }
+    
     if (!this.initialized) {
       return [];
     }
@@ -155,6 +190,19 @@ class DatabaseService {
     }
   }
 
+  async getAllAsync(table: string): Promise<any[]> {
+    if (this.useSupabase) {
+      try {
+        return await supabaseService.getAll(table);
+      } catch (error) {
+        console.error('Supabase getAll error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
+    return this.getAll(table);
+  }
+
   getById(table: string, id: string): any | null {
     try {
       const items = this.getAll(table);
@@ -166,6 +214,17 @@ class DatabaseService {
   }
 
   async update(table: string, id: string, data: any): Promise<any> {
+    if (this.useSupabase) {
+      try {
+        const result = await supabaseService.update(table, id, data);
+        this.notifyListeners(table);
+        return result;
+      } catch (error) {
+        console.error('Supabase update error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
     if (!this.initialized) {
       throw new Error('Database not initialized');
     }
@@ -189,10 +248,6 @@ class DatabaseService {
       
       console.log(`✅ Updated item in ${table}:`, id);
       
-      if (!this.isOnline) {
-        this.syncQueue.push({ action: 'update', table, id, data: updatedItem });
-      }
-      
       // Notify listeners
       this.notifyListeners(table);
       
@@ -204,6 +259,17 @@ class DatabaseService {
   }
 
   async delete(table: string, id: string): Promise<boolean> {
+    if (this.useSupabase) {
+      try {
+        await supabaseService.delete(table, id);
+        this.notifyListeners(table);
+        return true;
+      } catch (error) {
+        console.error('Supabase delete error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
     if (!this.initialized) {
       throw new Error('Database not initialized');
     }
@@ -220,10 +286,6 @@ class DatabaseService {
       
       console.log(`✅ Deleted item from ${table}:`, id);
       
-      if (!this.isOnline) {
-        this.syncQueue.push({ action: 'delete', table, id });
-      }
-      
       // Notify listeners
       this.notifyListeners(table);
       
@@ -236,6 +298,17 @@ class DatabaseService {
 
   // Bulk operations for import - ENHANCED
   async bulkCreate(table: string, items: any[]): Promise<any[]> {
+    if (this.useSupabase) {
+      try {
+        const result = await supabaseService.bulkCreate(table, items);
+        this.notifyListeners(table);
+        return result;
+      } catch (error) {
+        console.error('Supabase bulkCreate error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
     if (!this.initialized) {
       throw new Error('Database not initialized');
     }
@@ -324,6 +397,12 @@ class DatabaseService {
 
   // Statistics
   getStats(): Record<string, number> {
+    if (this.useSupabase) {
+      // For Supabase, use async version
+      console.warn('getStats is synchronous, use getStatsAsync for Supabase');
+      return {};
+    }
+    
     const stats: Record<string, number> = {};
     
     this.config.tables.forEach(table => {
@@ -333,8 +412,24 @@ class DatabaseService {
     return stats;
   }
 
+  async getStatsAsync(): Promise<Record<string, number>> {
+    if (this.useSupabase) {
+      try {
+        return await supabaseService.getStats();
+      } catch (error) {
+        console.error('Supabase getStats error, falling back to localStorage:', error);
+        // Fall back to localStorage
+      }
+    }
+    
+    return this.getStats();
+  }
+
   // Health check
   isHealthy(): boolean {
+    if (this.useSupabase) {
+      return supabaseService.isHealthy();
+    }
     return this.initialized && typeof Storage !== 'undefined';
   }
 

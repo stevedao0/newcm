@@ -126,6 +126,7 @@ const ImportData: React.FC = () => {
             mucNhuanBut: row['Mức nhuận bút'] || row['Muc nhuan but'] || '0',
             nguoiPhuTrach: row['Người phụ trách'] || row['Nguoi phu trach'] || '',
             tinhTrang: row['Tình trạng'] || row['Tinh trang'] || 'Đã ký',
+            idVideo: '',
             // Default values for required fields
             code: '',
             tenTacPham: '',
@@ -256,7 +257,8 @@ const ImportData: React.FC = () => {
             hinhThuc: row['Hình thức'] || row['Hinh thuc'] || '',
             mucNhuanBut: row['Mức nhuận bút'] || row['Muc nhuan but'] || '0',
             ghiChu1: row['Ghi chú 1'] || row['Ghi chu 1'] || '',
-            ghiChu2: row['Ghi chú 2'] || row['Ghi chu 2'] || ''
+            ghiChu2: row['Ghi chú 2'] || row['Ghi chu 2'] || '',
+            nhatKy: []
           };
 
           // Kiểm tra trùng lặp contract
@@ -304,7 +306,7 @@ const ImportData: React.FC = () => {
               mucNhuanBut: contract.mucNhuanBut,
               tinhTrang: contract.tinhTrang,
               totalContracts: 1,
-              totalRevenue: parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0
+              totalRevenue: parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0
             };
 
             // Kiểm tra trùng lặp work
@@ -319,7 +321,7 @@ const ImportData: React.FC = () => {
                   ...work,
                   id: existingWorks[existingIndex].id, // Giữ nguyên ID
                   totalContracts: existingWorks[existingIndex].totalContracts + 1,
-                  totalRevenue: existingWorks[existingIndex].totalRevenue + (parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0)
+                  totalRevenue: existingWorks[existingIndex].totalRevenue + (parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0)
                 };
                 updatedWorks.push(updatedWork);
               }
@@ -518,13 +520,13 @@ const ImportData: React.FC = () => {
             email: '',
             website: '',
             soHopDongDaKy: 1,
-            tongDoanhThu: parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0,
+            tongDoanhThu: parseInt(String(contract.mucNhuanBut || '0').replace(/,/g, '')) || 0,
             ghiChu: ''
           });
         } else {
           const partner = partnersMap.get(key)!;
           partner.soHopDongDaKy += 1;
-          partner.tongDoanhThu += parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0;
+          partner.tongDoanhThu += parseInt(String(contract.mucNhuanBut || '0').replace(/,/g, '')) || 0;
         }
       });
       

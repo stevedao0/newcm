@@ -16,6 +16,7 @@ import { ImportResult } from '../types/contract';
 import { useNotifications } from '../contexts/NotificationContext';
 import { db } from '../services/database';
 import { exportContracts, exportWorks, exportPartners, exportChannels } from '../utils/exportUtils';
+import { formatDate } from '../utils/formatUtils';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
@@ -235,7 +236,7 @@ const ImportData: React.FC = () => {
             id: `contract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             stt: parseInt(row.STT) || i + 1,
             linhVuc: row['Lĩnh vực'] || row['Linh vuc'] || 'SCTT',
-            ngayKy: row['Ngày ký'] || row['Ngay ky'] || '',
+            ngayKy: formatDate(row['Ngày ký'] || row['Ngay ky'] || ''),
             soHopDong: row['Số hợp đồng'] || row['So hop dong'] || '',
             soPhuLuc: row['Số phụ lục'] || row['So phu luc'] || '',
             idKenh: row['ID Kênh'] || row['ID kenh'] || '',
@@ -250,8 +251,8 @@ const ImportData: React.FC = () => {
             tacGia: row['Tác giả'] || row['Tac gia'] || '',
             tacGiaNhac: row['Tác giả nhạc'] || row['Tac gia nhac'] || '',
             tacGiaLoi: row['Tác giả lời'] || row['Tac gia loi'] || '',
-            ngayBatDau: row['Ngày bắt đầu'] || row['Ngay bat dau'] || '',
-            ngayKetThuc: row['Ngày kết thúc'] || row['Ngay ket thuc'] || '',
+            ngayBatDau: formatDate(row['Ngày bắt đầu'] || row['Ngay bat dau'] || ''),
+            ngayKetThuc: formatDate(row['Ngày kết thúc'] || row['Ngay ket thuc'] || ''),
             thoiGian: row['Thời gian'] || row['Thoi gian'] || '',
             thoiLuong: row['Thời lượng'] || row['Thoi luong'] || '',
             hinhThuc: row['Hình thức'] || row['Hinh thuc'] || '',
@@ -299,8 +300,8 @@ const ImportData: React.FC = () => {
               tacGia: contract.tacGia,
               tacGiaNhac: contract.tacGiaNhac,
               tacGiaLoi: contract.tacGiaLoi,
-              ngayBatDau: contract.ngayBatDau,
-              ngayKetThuc: contract.ngayKetThuc,
+              ngayBatDau: formatDate(contract.ngayBatDau),
+              ngayKetThuc: formatDate(contract.ngayKetThuc),
               thoiLuong: contract.thoiLuong,
               hinhThuc: contract.hinhThuc,
               mucNhuanBut: contract.mucNhuanBut,
@@ -546,7 +547,7 @@ const ImportData: React.FC = () => {
             subscribers: 0,
             views: 0,
             nguoiPhuTrach: contract.nguoiPhuTrach,
-            ngayTao: contract.ngayKy,
+            ngayTao: formatDate(contract.ngayKy),
             trangThai: 'Hoạt động',
             ghiChu: ''
           });

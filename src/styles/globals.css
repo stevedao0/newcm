@@ -355,7 +355,6 @@
   .scrollbar-modern::-webkit-scrollbar-thumb:hover {
     background: rgb(148 163 184);
   }
-}
 
 /* Print styles */
 @media print {

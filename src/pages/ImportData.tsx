@@ -21,7 +21,7 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
-const ImportData: React.FC = () => {
+export default function ImportData() {
   const [infoFile, setInfoFile] = useState<File | null>(null);
   const [workListFile, setWorkListFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -980,6 +980,3 @@ const ImportData: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default ImportData;

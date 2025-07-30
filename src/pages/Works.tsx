@@ -8,24 +8,19 @@ import {
   Eye,
   Download,
   Music,
-  Building2,
+  User,
   Calendar,
   DollarSign,
-  User,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Grid,
   List,
-  Play,
-  Video,
-  Headphones,
-  FileText,
-  Link2,
-  Code
+  Clock,
+  FileText
 } from 'lucide-react';
 import { contractsData } from '../data/contracts';
-import { Contract, Work } from '../types/contract';
+import { Work } from '../types/contract';
 import Button from '../components/ui/Button';
 import Card, { CardContent } from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
@@ -34,13 +29,14 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { db } from '../services/database';
 import { formatCurrency, formatDate } from '../utils/formatUtils';
 import { exportWorks } from '../utils/exportUtils';
+import { extractWorks } from '../utils/importUtils';
 import toast from 'react-hot-toast';
 
 const Works: React.FC = () => {
   const [works, setWorks] = useState<Work[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [formatFilter, setFormatFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [formatFilter, setFormatFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [sortField, setSortField] = useState<keyof Work>('tenTacPham');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -78,9 +74,23 @@ const Works: React.FC = () => {
       
       if (dbWorks.length === 0) {
         console.log('No works in database, generating from contracts...');
-        // Generate works from contracts data
-        const worksFromContracts = generateWorksFromContracts(contractsData);
-        await Promise.all(worksFromContracts.map(work => db.create('works', work)));
+        // Generate works from contracts
+        const contracts = db.getAll('contracts');
+        if (contracts.length === 0) {
+          // Initialize with sample data if no contracts
+          const contractsWithIds = contractsData.map(contract => ({
+            ...contract,
+            id: contract.id || `contract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          }));
+          
+          await Promise.all(contractsWithIds.map(contract => db.create('contracts', contract)));
+        }
+        
+        // Extract works from contracts
+        const allContracts = db.getAll('contracts');
+        const extractedWorks = extractWorks(allContracts);
+        
+        await Promise.all(extractedWorks.map(work => db.create('works', work)));
         dbWorks = db.getAll('works');
       }
       
@@ -88,50 +98,12 @@ const Works: React.FC = () => {
       setWorks(dbWorks);
     } catch (error) {
       console.error('Error loading works:', error);
-      const worksFromContracts = generateWorksFromContracts(contractsData);
-      setWorks(worksFromContracts);
+      // Fallback to extracted works from static data
+      const extractedWorks = extractWorks(contractsData);
+      setWorks(extractedWorks);
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateWorksFromContracts = (contracts: Contract[]): Work[] => {
-    const worksMap = new Map<string, Work>();
-    
-    contracts.forEach(contract => {
-      if (!contract.code || !contract.tenTacPham) return;
-      
-      const key = contract.code;
-      
-      if (!worksMap.has(key)) {
-        worksMap.set(key, {
-          id: `work-${contract.id}`,
-          code: contract.code,
-          soHopDong: contract.soHopDong,
-          soPhuLuc: contract.soPhuLuc,
-          idKenh: contract.idKenh,
-          tenKenh: contract.tenKenh,
-          tenTacPham: contract.tenTacPham,
-          tacGia: contract.tacGia,
-          tacGiaNhac: contract.tacGiaNhac,
-          tacGiaLoi: contract.tacGiaLoi,
-          ngayBatDau: contract.ngayBatDau,
-          ngayKetThuc: contract.ngayKetThuc,
-          thoiLuong: contract.thoiLuong,
-          hinhThuc: contract.hinhThuc,
-          mucNhuanBut: contract.mucNhuanBut,
-          tinhTrang: contract.tinhTrang,
-          totalContracts: 1,
-          totalRevenue: parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0
-        });
-      } else {
-        const work = worksMap.get(key)!;
-        work.totalContracts += 1;
-        work.totalRevenue += parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0;
-      }
-    });
-    
-    return Array.from(worksMap.values());
   };
 
   const handleSort = (field: keyof Work) => {
@@ -158,16 +130,16 @@ const Works: React.FC = () => {
           (work.tacGia && work.tacGia.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (work.tenKenh && work.tenKenh.toLowerCase().includes(searchTerm.toLowerCase()));
         
-        const matchesFormat = formatFilter === 'all' || work.hinhThuc === formatFilter;
         const matchesStatus = statusFilter === 'all' || work.tinhTrang === statusFilter;
+        const matchesFormat = formatFilter === 'all' || work.hinhThuc === formatFilter;
         
         const matchesFilters = 
-          (!filters.startDate || new Date(work.ngayBatDau.split('/').reverse().join('-')) >= new Date(filters.startDate)) &&
-          (!filters.endDate || new Date(work.ngayKetThuc.split('/').reverse().join('-')) <= new Date(filters.endDate)) &&
+          (!filters.startDate || new Date(formatDate(work.ngayBatDau).split('/').reverse().join('-')) >= new Date(filters.startDate)) &&
+          (!filters.endDate || new Date(formatDate(work.ngayKetThuc).split('/').reverse().join('-')) <= new Date(filters.endDate)) &&
           (!filters.minRevenue || work.totalRevenue >= parseInt(filters.minRevenue)) &&
           (!filters.maxRevenue || work.totalRevenue <= parseInt(filters.maxRevenue));
 
-        return matchesSearch && matchesFormat && matchesStatus && matchesFilters;
+        return matchesSearch && matchesStatus && matchesFormat && matchesFilters;
       })
       .sort((a, b) => {
         const aValue = a[sortField];
@@ -185,7 +157,7 @@ const Works: React.FC = () => {
         
         return 0;
       });
-  }, [works, searchTerm, formatFilter, statusFilter, filters, sortField, sortDirection]);
+  }, [works, searchTerm, statusFilter, formatFilter, filters, sortField, sortDirection]);
 
   const handleViewWork = (work: Work) => {
     setSelectedWork(work);
@@ -291,35 +263,13 @@ const Works: React.FC = () => {
     }
   };
 
-  const getFormatIcon = (format: string) => {
-    if (format.toLowerCase().includes('video')) {
-      return <Video className="w-6 h-6 text-white opacity-80" />;
-    } else if (format.toLowerCase().includes('audio')) {
-      return <Headphones className="w-6 h-6 text-white opacity-80" />;
-    } else {
-      return <Music className="w-6 h-6 text-white opacity-80" />;
-    }
-  };
-
-  const getFormatColor = (format: string) => {
-    if (format.toLowerCase().includes('video')) {
-      return 'from-purple-500 to-purple-600';
-    } else if (format.toLowerCase().includes('audio')) {
-      return 'from-green-500 to-green-600';
-    } else if (format.toLowerCase().includes('karaoke')) {
-      return 'from-blue-500 to-blue-600';
-    } else {
-      return 'from-orange-500 to-orange-600';
-    }
-  };
-
   const renderWorkCard = (work: Work, index: number) => (
     <div 
-      className="card-uniform bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group hover-lift h-[280px]"
+      className="card-uniform bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group hover-lift"
       onClick={() => handleViewWork(work)}
     >
-      <div className={`card-header h-16 bg-gradient-to-br ${getFormatColor(work.hinhThuc)} relative flex items-center justify-center p-2`}>
-        {getFormatIcon(work.hinhThuc)}
+      <div className="card-header bg-gradient-to-br from-purple-500 to-pink-600 relative flex items-center justify-center">
+        <Music className="w-8 h-8 text-white opacity-80" />
         <div className="absolute top-2 right-2">
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
             work.tinhTrang === 'Đã ký' ? 'bg-green-100 bg-opacity-80 text-green-800' :
@@ -332,102 +282,69 @@ const Works: React.FC = () => {
             {work.tinhTrang}
           </span>
         </div>
-        <div className="absolute bottom-2 left-2 text-white text-xs">
+        <div className="absolute bottom-2 left-2 text-white text-xs font-medium">
           {work.hinhThuc}
         </div>
       </div>
       
-      <div className="card-content p-3 flex flex-col h-[calc(280px-4rem)]">
-        <div className="flex-1 overflow-hidden">
-          <div className="flex items-center mb-1.5">
-            <Music className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <div className="text-sm font-medium text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-              {work.tenTacPham}
+      <div className="card-content">
+        <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          {work.tenTacPham}
+        </h3>
+        
+        <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300 mb-3">
+          <div className="flex items-center">
+            <User className="w-3 h-3 mr-1 text-slate-400 dark:text-slate-500" />
+            <span className="truncate">{work.tacGia}</span>
+          </div>
+          
+          <div className="flex items-center">
+            <FileText className="w-3 h-3 mr-1 text-slate-400 dark:text-slate-500" />
+            <span className="truncate font-mono">{work.code}</span>
+          </div>
+          
+          <div className="flex items-center">
+            <Calendar className="w-3 h-3 mr-1 text-slate-400 dark:text-slate-500" />
+            <span>{formatDate(work.ngayBatDau)} - {formatDate(work.ngayKetThuc)}</span>
+          </div>
+          
+          {work.thoiLuong && (
+            <div className="flex items-center">
+              <Clock className="w-3 h-3 mr-1 text-slate-400 dark:text-slate-500" />
+              <span>{work.thoiLuong}</span>
             </div>
-          </div>
-          
-          <div className="flex items-center mb-1.5">
-            <Code className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <span className="text-xs text-slate-600 font-mono">{work.code}</span>
-          </div>
-          
-          <div className="flex items-center mb-1.5">
-            <User className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <div className="text-xs text-slate-600 line-clamp-1">
-              {work.tacGia}
-              {(work.tacGiaNhac || work.tacGiaLoi) && (
-                <span className="text-xs text-slate-500">
-                  {work.tacGiaNhac && ` (Nhạc: ${work.tacGiaNhac})`}
-                  {work.tacGiaLoi && ` (Lời: ${work.tacGiaLoi})`}
-                </span>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center mb-1.5">
-            <FileText className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <span className="text-xs text-slate-600">
-              {work.soHopDong}
-              {work.soPhuLuc && <span className="ml-1">({work.soPhuLuc})</span>}
-            </span>
-          </div>
-          
-          <div className="flex items-center mb-1.5">
-            <Link2 className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <a 
-              href={`https://youtube.com/channel/${work.idKenh}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs text-blue-600 hover:underline truncate"
-            >
-              {work.tenKenh} ({work.idKenh})
-            </a>
-          </div>
-          
-          <div className="flex items-center mb-1.5">
-            <Calendar className="w-3.5 h-3.5 mr-1 text-slate-500 flex-shrink-0" />
-            <span className="text-xs text-slate-600">
-              {formatDate(work.ngayBatDau)} - {formatDate(work.ngayKetThuc)}
-            </span>
-          </div>
+          )}
         </div>
         
-        <div className="mt-2 pt-2 border-t border-slate-100">
-          <div className="flex justify-between items-center">
+        <div className="card-footer">
+          <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
-              <p className="text-xs text-slate-500 mb-0.5">Nhuận bút</p>
-              <p className="text-sm font-medium text-slate-900">
-                {formatCurrency(work.mucNhuanBut)}
+              <p className="text-xs text-slate-500 dark:text-slate-400">Hợp đồng</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{work.totalContracts}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Doanh thu</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                {formatCurrency(work.totalRevenue)}
               </p>
             </div>
-            
-            <div className="flex space-x-1">
-              <button 
-                className="p-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewWork(work);
-                }}
-                title="Xem chi tiết"
-              >
-                <Eye className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                className="p-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                onClick={(e) => handleEditWork(work, e)}
-                title="Chỉnh sửa"
-              >
-                <Edit className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                className="p-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                onClick={(e) => handleDeleteWork(work, e)}
-                title="Xóa"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              className="p-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+              onClick={(e) => handleEditWork(work, e)}
+              title="Chỉnh sửa"
+            >
+              <Edit className="w-3 h-3" />
+            </button>
+            <button 
+              className="p-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+              onClick={(e) => handleDeleteWork(work, e)}
+              title="Xóa"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>
@@ -436,9 +353,6 @@ const Works: React.FC = () => {
 
   const handleLoadMore = () => {
     console.log('Loading more works...');
-    // This function will be called by InfiniteScroll when the user scrolls to the bottom
-    // In this implementation, we're already loading all filtered items at once
-    // But we keep this function for future pagination implementation
   };
 
   return (
@@ -446,8 +360,8 @@ const Works: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Quản lý Tác phẩm</h1>
-          <p className="text-slate-600 mt-1">Quản lý thư viện tác phẩm âm nhạc</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Tác phẩm</h1>
+          <p className="mt-1 text-slate-600 dark:text-slate-300">Quản lý thông tin tác phẩm âm nhạc</p>
         </div>
         <div className="flex space-x-3">
           <div className="relative group">
@@ -457,22 +371,22 @@ const Works: React.FC = () => {
             >
               Xuất Excel
             </Button>
-            <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+            <div className="absolute right-0 top-full mt-1 w-32 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
               <button 
                 onClick={() => handleExport('csv')}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 rounded-t-lg"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 rounded-t-lg text-slate-900 dark:text-white"
               >
                 Xuất CSV
               </button>
               <button 
                 onClick={() => handleExport('excel')}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white"
               >
                 Xuất Excel
               </button>
               <button 
                 onClick={() => handleExport('pdf')}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 rounded-b-lg"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 rounded-b-lg text-slate-900 dark:text-white"
               >
                 Xuất PDF
               </button>
@@ -483,7 +397,7 @@ const Works: React.FC = () => {
             icon={Plus}
             onClick={handleAddWork}
           >
-            Thêm tác phẩm
+            Thêm tác phẩm mới
           </Button>
         </div>
       </div>
@@ -498,33 +412,19 @@ const Works: React.FC = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Tìm kiếm tác phẩm, tác giả, số hợp đồng, kênh..."
+                    placeholder="Tìm kiếm theo tên tác phẩm, code, tác giả..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-3">
                 <select 
-                  value={formatFilter}
-                  onChange={(e) => setFormatFilter(e.target.value)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">Tất cả hình thức</option>
-                  <option value="Video">Video</option>
-                  <option value="Audio">Audio</option>
-                  <option value="Mv Karaoke">MV Karaoke</option>
-                  <option value="Midi Karaoke">Midi Karaoke</option>
-                  <option value="Trailer">Trailer</option>
-                  <option value="Teaser">Teaser</option>
-                </select>
-
-                <select 
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
                   <option value="all">Tất cả trạng thái</option>
                   <option value="Đã ký">Đã ký</option>
@@ -533,17 +433,29 @@ const Works: React.FC = () => {
                   <option value="Khảo sát">Khảo sát</option>
                   <option value="Đàm phán">Đàm phán</option>
                 </select>
+
+                <select 
+                  value={formatFilter}
+                  onChange={(e) => setFormatFilter(e.target.value)}
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option value="all">Tất cả hình thức</option>
+                  <option value="Video">Video</option>
+                  <option value="Audio">Audio</option>
+                  <option value="Mv Karaoke">MV Karaoke</option>
+                  <option value="VIDEO">VIDEO</option>
+                </select>
                 
-                <div className="flex space-x-2 border border-slate-300 rounded-lg overflow-hidden">
+                <div className="flex space-x-2 border border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden">
                   <button 
-                    className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'bg-white text-slate-600'}`}
+                    className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
                     onClick={() => setViewMode('grid')}
                     title="Xem dạng lưới"
                   >
                     <Grid className="w-5 h-5" />
                   </button>
                   <button 
-                    className={`px-3 py-2 ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'bg-white text-slate-600'}`}
+                    className={`px-3 py-2 ${viewMode === 'table' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
                     onClick={() => setViewMode('table')}
                     title="Xem dạng bảng"
                   >
@@ -563,50 +475,50 @@ const Works: React.FC = () => {
 
             {/* Advanced Filters */}
             {showAdvancedFilter && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Từ ngày
                   </label>
                   <input
                     type="date"
                     value={filters.startDate}
                     onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Đến ngày
                   </label>
                   <input
                     type="date"
                     value={filters.endDate}
                     onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Doanh thu tối thiểu
                   </label>
                   <input
                     type="number"
                     value={filters.minRevenue}
                     onChange={(e) => setFilters(prev => ({ ...prev, minRevenue: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Doanh thu tối đa
                   </label>
                   <input
                     type="number"
                     value={filters.maxRevenue}
                     onChange={(e) => setFilters(prev => ({ ...prev, maxRevenue: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                     placeholder="10000000"
                   />
                 </div>
@@ -617,7 +529,7 @@ const Works: React.FC = () => {
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-slate-600">
+      <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
         <span>Tìm thấy {filteredAndSortedWorks.length} tác phẩm</span>
         <div className="flex items-center space-x-2">
           <span>Sắp xếp theo:</span>
@@ -628,18 +540,14 @@ const Works: React.FC = () => {
               setSortField(field as keyof Work);
               setSortDirection(direction as 'asc' | 'desc');
             }}
-            className="px-2 py-1 border border-slate-300 rounded text-sm"
+            className="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
           >
             <option value="tenTacPham-asc">Tên tác phẩm (A-Z)</option>
             <option value="tenTacPham-desc">Tên tác phẩm (Z-A)</option>
-            <option value="tacGia-asc">Tác giả (A-Z)</option>
-            <option value="tacGia-desc">Tác giả (Z-A)</option>
             <option value="totalRevenue-desc">Doanh thu (Cao-Thấp)</option>
             <option value="totalRevenue-asc">Doanh thu (Thấp-Cao)</option>
-            <option value="ngayKetThuc-desc">Ngày kết thúc (Mới-Cũ)</option>
-            <option value="ngayKetThuc-asc">Ngày kết thúc (Cũ-Mới)</option>
-            <option value="code-asc">Code (A-Z)</option>
-            <option value="code-desc">Code (Z-A)</option>
+            <option value="totalContracts-desc">Hợp đồng (Nhiều-Ít)</option>
+            <option value="totalContracts-asc">Hợp đồng (Ít-Nhiều)</option>
           </select>
         </div>
       </div>
@@ -651,7 +559,7 @@ const Works: React.FC = () => {
             items={filteredAndSortedWorks}
             renderItem={renderWorkCard}
             loadMore={handleLoadMore}
-            hasMore={true} // Set to true to enable infinite scroll
+            hasMore={true}
             loading={loading}
             itemsPerLoad={24}
             className="min-h-[500px]"
@@ -664,10 +572,10 @@ const Works: React.FC = () => {
         <Card>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
                   <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
                     onClick={() => handleSort('tenTacPham')}
                   >
                     <div className="flex items-center space-x-1">
@@ -676,7 +584,7 @@ const Works: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
                     onClick={() => handleSort('tacGia')}
                   >
                     <div className="flex items-center space-x-1">
@@ -684,147 +592,80 @@ const Works: React.FC = () => {
                       {getSortIcon('tacGia')}
                     </div>
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                    Thời gian
+                  </th>
                   <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('soHopDong')}
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
+                    onClick={() => handleSort('totalContracts')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Hợp đồng</span>
-                      {getSortIcon('soHopDong')}
+                      {getSortIcon('totalContracts')}
                     </div>
                   </th>
                   <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('tenKenh')}
+                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
+                    onClick={() => handleSort('totalRevenue')}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Kênh</span>
-                      {getSortIcon('tenKenh')}
+                      <span>Doanh thu</span>
+                      {getSortIcon('totalRevenue')}
                     </div>
                   </th>
-                  <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('ngayBatDau')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Thời gian</span>
-                      {getSortIcon('ngayBatDau')}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('hinhThuc')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Hình thức</span>
-                      {getSortIcon('hinhThuc')}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('mucNhuanBut')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Nhuận bút</span>
-                      {getSortIcon('mucNhuanBut')}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                    onClick={() => handleSort('tinhTrang')}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Trạng thái</span>
-                      {getSortIcon('tinhTrang')}
-                    </div>
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
                 {filteredAndSortedWorks.map((work) => (
-                  <tr key={work.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => handleViewWork(work)}>
-                    <td className="px-4 py-3">
+                  <tr key={work.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer" onClick={() => handleViewWork(work)}>
+                    <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-slate-900">{work.tenTacPham}</div>
-                        <div className="text-xs text-slate-500 font-mono">Code: {work.code}</div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">{work.tenTacPham}</div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">{work.hinhThuc}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm text-slate-900">{work.tacGia}</div>
-                        {(work.tacGiaNhac || work.tacGiaLoi) && (
-                          <div className="text-xs text-slate-500">
-                            {work.tacGiaNhac && `Nhạc: ${work.tacGiaNhac}`}
-                            {work.tacGiaNhac && work.tacGiaLoi && ' | '}
-                            {work.tacGiaLoi && `Lời: ${work.tacGiaLoi}`}
-                          </div>
+                        <div className="text-sm text-slate-900 dark:text-white">{work.tacGia}</div>
+                        {work.tacGiaNhac && work.tacGiaNhac !== work.tacGia && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Nhạc: {work.tacGiaNhac}</div>
+                        )}
+                        {work.tacGiaLoi && work.tacGiaLoi !== work.tacGia && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400">Lời: {work.tacGiaLoi}</div>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="text-sm text-slate-900">{work.soHopDong}</div>
-                        {work.soPhuLuc && (
-                          <div className="text-xs text-slate-500">Phụ lục: {work.soPhuLuc}</div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="text-sm text-slate-900">{work.tenKenh}</div>
-                        <a 
-                          href={`https://youtube.com/channel/${work.idKenh}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-blue-600 hover:underline font-mono"
-                        >
-                          {work.idKenh}
-                        </a>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm font-mono text-slate-900 dark:text-white">{work.code}</td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-slate-600 dark:text-slate-300">
                         <div>{formatDate(work.ngayBatDau)}</div>
-                        <div>{formatDate(work.ngayKetThuc)}</div>
+                        <div>đến {formatDate(work.ngayKetThuc)}</div>
+                        {work.thoiLuong && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400">{work.thoiLuong}</div>
+                        )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-800">
-                        {work.hinhThuc}
-                      </span>
+                    <td className="px-6 py-4 text-center">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{work.totalContracts}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">hợp đồng</div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="text-sm font-medium text-slate-900">
-                          {formatCurrency(work.mucNhuanBut)}
-                        </div>
-                        <div className="text-xs text-slate-500">{work.totalContracts} hợp đồng</div>
-                      </div>
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                      {formatCurrency(work.totalRevenue)}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        work.tinhTrang === 'Đã ký' ? 'bg-green-100 text-green-800' :
-                        work.tinhTrang === 'Tái ký' ? 'bg-blue-100 text-blue-800' :
-                        work.tinhTrang === 'Ký mới' ? 'bg-yellow-100 text-yellow-800' :
-                        work.tinhTrang === 'Khảo sát' ? 'bg-purple-100 text-purple-800' :
-                        work.tinhTrang === 'Đàm phán' ? 'bg-orange-100 text-orange-800' :
-                        'bg-slate-100 text-slate-800'
-                      }`}>
-                        {work.tinhTrang}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center space-x-2">
+                    <td className="px-6 py-4">
+                      <div className="flex space-x-2">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewWork(work);
                           }}
-                          className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                          className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded"
                           title="Xem chi tiết"
                         >
                           <Eye className="w-4 h-4" />
@@ -834,7 +675,7 @@ const Works: React.FC = () => {
                             e.stopPropagation();
                             handleEditWork(work, e);
                           }}
-                          className="p-1 text-green-600 hover:bg-green-100 rounded"
+                          className="p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900 rounded"
                           title="Chỉnh sửa"
                         >
                           <Edit className="w-4 h-4" />
@@ -844,7 +685,7 @@ const Works: React.FC = () => {
                             e.stopPropagation();
                             handleDeleteWork(work, e);
                           }}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                          className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded"
                           title="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -865,119 +706,81 @@ const Works: React.FC = () => {
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
           title="Chi tiết tác phẩm"
-          size="xl"
+          size="lg"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Thông tin tác phẩm</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Thông tin tác phẩm</h3>
               
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-500">Tên tác phẩm</p>
-                  <p className="text-base font-medium">{selectedWork.tenTacPham}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Tên tác phẩm</p>
+                  <p className="text-base font-medium text-slate-900 dark:text-white">{selectedWork.tenTacPham}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-slate-500">Code</p>
-                  <p className="text-base font-mono">{selectedWork.code}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Code</p>
+                  <p className="text-base font-mono text-slate-900 dark:text-white">{selectedWork.code}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-slate-500">Tác giả</p>
-                  <p className="text-base">{selectedWork.tacGia}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Tác giả</p>
+                  <p className="text-base text-slate-900 dark:text-white">{selectedWork.tacGia}</p>
                 </div>
                 
                 {selectedWork.tacGiaNhac && (
                   <div>
-                    <p className="text-sm text-slate-500">Tác giả nhạc</p>
-                    <p className="text-base">{selectedWork.tacGiaNhac}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Tác giả nhạc</p>
+                    <p className="text-base text-slate-900 dark:text-white">{selectedWork.tacGiaNhac}</p>
                   </div>
                 )}
                 
                 {selectedWork.tacGiaLoi && (
                   <div>
-                    <p className="text-sm text-slate-500">Tác giả lời</p>
-                    <p className="text-base">{selectedWork.tacGiaLoi}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Tác giả lời</p>
+                    <p className="text-base text-slate-900 dark:text-white">{selectedWork.tacGiaLoi}</p>
                   </div>
                 )}
                 
                 <div>
-                  <p className="text-sm text-slate-500">Hình thức</p>
-                  <p className="text-base">{selectedWork.hinhThuc}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Hình thức</p>
+                  <p className="text-base text-slate-900 dark:text-white">{selectedWork.hinhThuc}</p>
                 </div>
                 
                 {selectedWork.thoiLuong && (
                   <div>
-                    <p className="text-sm text-slate-500">Thời lượng</p>
-                    <p className="text-base">{selectedWork.thoiLuong}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Thời lượng</p>
+                    <p className="text-base text-slate-900 dark:text-white">{selectedWork.thoiLuong}</p>
                   </div>
                 )}
               </div>
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Thông tin hợp đồng</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Thống kê</h3>
               
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-500">Số hợp đồng</p>
-                  <p className="text-base">{selectedWork.soHopDong}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Số hợp đồng</p>
+                  <p className="text-base font-medium text-slate-900 dark:text-white">{selectedWork.totalContracts}</p>
                 </div>
                 
-                {selectedWork.soPhuLuc && (
-                  <div>
-                    <p className="text-sm text-slate-500">Số phụ lục</p>
-                    <p className="text-base">{selectedWork.soPhuLuc}</p>
-                  </div>
-                )}
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Tổng doanh thu</p>
+                  <p className="text-base font-medium text-slate-900 dark:text-white">{formatCurrency(selectedWork.totalRevenue)}</p>
+                </div>
                 
                 <div>
-                  <p className="text-sm text-slate-500">Kênh (ID kênh)</p>
-                  <p className="text-base">{selectedWork.tenKenh}</p>
-                  <p className="text-xs text-slate-500 font-mono">
-                    <a 
-                      href={`https://youtube.com/channel/${selectedWork.idKenh}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      {selectedWork.idKenh}
-                    </a>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Thời gian hiệu lực</p>
+                  <p className="text-base text-slate-900 dark:text-white">
+                    {formatDate(selectedWork.ngayBatDau)} - {formatDate(selectedWork.ngayKetThuc)}
                   </p>
                 </div>
                 
                 <div>
-                  <p className="text-sm text-slate-500">Thời gian hiệu lực</p>
-                  <p className="text-base">{formatDate(selectedWork.ngayBatDau)} - {formatDate(selectedWork.ngayKetThuc)}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-slate-500">Tình trạng</p>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    selectedWork.tinhTrang === 'Đã ký' ? 'bg-green-100 text-green-800' :
-                    selectedWork.tinhTrang === 'Tái ký' ? 'bg-blue-100 text-blue-800' :
-                    selectedWork.tinhTrang === 'Ký mới' ? 'bg-yellow-100 text-yellow-800' :
-                    selectedWork.tinhTrang === 'Khảo sát' ? 'bg-purple-100 text-purple-800' :
-                    selectedWork.tinhTrang === 'Đàm phán' ? 'bg-orange-100 text-orange-800' :
-                    'bg-slate-100 text-slate-800'
-                  }`}>
-                    {selectedWork.tinhTrang}
-                  </span>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-slate-500">Mức nhuận bút</p>
-                  <p className="text-base font-medium">{formatCurrency(selectedWork.mucNhuanBut)}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-slate-500">Tổng số hợp đồng</p>
-                  <p className="text-base font-medium">{selectedWork.totalContracts}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-slate-500">Tổng doanh thu</p>
-                  <p className="text-base font-medium">{formatCurrency(selectedWork.totalRevenue)}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Kênh phân phối</p>
+                  <p className="text-base text-slate-900 dark:text-white">{selectedWork.tenKenh}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{selectedWork.idKenh}</p>
                 </div>
               </div>
             </div>
@@ -1013,10 +816,10 @@ const Works: React.FC = () => {
         size="sm"
       >
         <div className="py-4">
-          <p className="text-slate-700">
+          <p className="text-slate-700 dark:text-slate-300">
             Bạn có chắc chắn muốn xóa tác phẩm <span className="font-semibold">{selectedWork?.tenTacPham}</span>?
           </p>
-          <p className="mt-2 text-slate-500 text-sm">
+          <p className="mt-2 text-slate-500 dark:text-slate-400 text-sm">
             Hành động này không thể hoàn tác.
           </p>
         </div>
@@ -1043,168 +846,44 @@ const Works: React.FC = () => {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         title={isEditMode ? "Chỉnh sửa tác phẩm" : "Thêm tác phẩm mới"}
-        size="xl"
+        size="lg"
       >
         <div className="py-4">
-          <form className="space-y-6" onSubmit={handleFormSubmit}>
+          <form className="space-y-4" onSubmit={handleFormSubmit}>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Tên tác phẩm <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="tenTacPham"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                defaultValue={selectedWork?.tenTacPham || ''}
+                required
+              />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tên tác phẩm <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="tenTacPham"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tenTacPham || ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Code <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="code"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   defaultValue={selectedWork?.code || ''}
                   required
                 />
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tác giả <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="tacGia"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tacGia || ''}
-                  required
-                />
-              </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tác giả nhạc
-                </label>
-                <input
-                  type="text"
-                  name="tacGiaNhac"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tacGiaNhac || ''}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tác giả lời
-                </label>
-                <input
-                  type="text"
-                  name="tacGiaLoi"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tacGiaLoi || ''}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Số hợp đồng <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="soHopDong"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.soHopDong || ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Số phụ lục
-                </label>
-                <input
-                  type="text"
-                  name="soPhuLuc"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.soPhuLuc || ''}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  ID Kênh <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="idKenh"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.idKenh || ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tên kênh <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="tenKenh"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tenKenh || ''}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Ngày bắt đầu <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="ngayBatDau"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.ngayBatDau ? selectedWork.ngayBatDau.split('/').reverse().join('-') : ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Ngày kết thúc <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="ngayKetThuc"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.ngayKetThuc ? selectedWork.ngayKetThuc.split('/').reverse().join('-') : ''}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Hình thức <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="hinhThuc"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   defaultValue={selectedWork?.hinhThuc || ''}
                   required
                 >
@@ -1212,56 +891,48 @@ const Works: React.FC = () => {
                   <option value="Video">Video</option>
                   <option value="Audio">Audio</option>
                   <option value="Mv Karaoke">MV Karaoke</option>
-                  <option value="Midi Karaoke">Midi Karaoke</option>
-                  <option value="Trailer">Trailer</option>
-                  <option value="Teaser">Teaser</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Thời lượng
-                </label>
-                <input
-                  type="text"
-                  name="thoiLuong"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.thoiLuong || ''}
-                  placeholder="00:03:30"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tình trạng <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="tinhTrang"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  defaultValue={selectedWork?.tinhTrang || 'Đã ký'}
-                  required
-                >
-                  <option value="Đã ký">Đã ký</option>
-                  <option value="Tái ký">Tái ký</option>
-                  <option value="Ký mới">Ký mới</option>
-                  <option value="Khảo sát">Khảo sát</option>
-                  <option value="Đàm phán">Đàm phán</option>
+                  <option value="VIDEO">VIDEO</option>
                 </select>
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Mức nhuận bút (VNĐ) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="mucNhuanBut"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={selectedWork?.mucNhuanBut || ''}
-                placeholder="1,000,000"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Tác giả <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="tacGia"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={selectedWork?.tacGia || ''}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Tác giả nhạc
+                </label>
+                <input
+                  type="text"
+                  name="tacGiaNhac"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={selectedWork?.tacGiaNhac || ''}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Tác giả lời
+                </label>
+                <input
+                  type="text"
+                  name="tacGiaLoi"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={selectedWork?.tacGiaLoi || ''}
+                />
+              </div>
             </div>
             
             <div className="flex justify-end space-x-3 pt-4 border-t mt-6">

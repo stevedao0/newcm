@@ -27,18 +27,18 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
 }) => {
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-slate-600 text-white hover:bg-slate-700 focus:ring-slate-500',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    warning: 'bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500',
-    outline: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-slate-500',
+    primary: 'btn-primary',
+    secondary: 'btn-secondary',
+    success: 'btn-success',
+    danger: 'btn-danger',
+    warning: 'bg-gradient-to-r from-warning-600 to-warning-700 text-white hover:from-warning-700 hover:to-warning-800 focus:ring-warning-500 shadow-soft hover:shadow-medium',
+    outline: 'btn-secondary',
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-5 py-2.5 text-lg',
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-2.5 text-sm',
+    lg: 'px-6 py-3 text-base',
   };
 
   return (
@@ -50,9 +50,9 @@ const Button: React.FC<ButtonProps> = ({
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${fullWidth ? 'w-full' : ''}
-        rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2
-        transition-colors duration-200 flex items-center justify-center
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-offset-2
+        transition-all duration-300 flex items-center justify-center
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:transform hover:-translate-y-0.5'}
         ${className}
       `}
     >

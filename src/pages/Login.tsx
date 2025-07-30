@@ -73,15 +73,21 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-secondary-50 to-primary-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/20 to-primary-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-secondary-400/20 to-secondary-600/20 rounded-full blur-3xl"></div>
+      </div>
+      
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-large border border-white/20 p-8 animate-scale-in">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-white" />
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
+              <User className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Contract Manager</h1>
-            <p className="text-slate-600 mt-2">
+            <h1 className="text-3xl font-bold text-secondary-900 mb-2">Contract Manager</h1>
+            <p className="text-secondary-600">
               {isLogin ? 'Đăng nhập vào hệ thống' : 'Tạo tài khoản mới'}
             </p>
           </div>
@@ -89,17 +95,17 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-secondary-700 mb-2">
                   Họ và tên <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-modern pl-12"
                     placeholder="Nhập họ và tên"
                     required={!isLogin}
                   />
@@ -108,65 +114,67 @@ const Login: React.FC = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-secondary-700 mb-2">
                 Email <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-modern pl-12"
                   placeholder="example@vcpmc.org"
                   required
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1">Email phải có định dạng @vcpmc.org</p>
+              <p className="text-xs text-secondary-500 mt-2">Email phải có định dạng @vcpmc.org</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-secondary-700 mb-2">
                 Mật khẩu <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-modern pl-12 pr-12"
                   placeholder="Nhập mật khẩu"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-secondary-600 p-1 rounded-lg hover:bg-secondary-100 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {isLogin && (
-                <p className="text-xs text-slate-500 mt-1">Demo: admin@vcpmc.org / 123456</p>
+                <p className="text-xs text-secondary-500 mt-2 bg-primary-50 p-2 rounded-lg">
+                  <strong>Demo:</strong> admin@vcpmc.org / 123456
+                </p>
               )}
             </div>
 
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-secondary-700 mb-2">
                   Xác nhận mật khẩu <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="input-modern pl-12"
                     placeholder="Nhập lại mật khẩu"
                     required={!isLogin}
                   />
@@ -179,7 +187,7 @@ const Login: React.FC = () => {
               variant="primary"
               fullWidth
               disabled={isLoading}
-              className="py-3"
+              className="py-3.5 text-base font-semibold"
             >
               {isLoading ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
             </Button>
@@ -192,7 +200,7 @@ const Login: React.FC = () => {
                 setIsLogin(!isLogin);
                 setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
               }}
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 p-2 rounded-lg hover:bg-primary-50"
             >
               {isLogin ? (
                 <>
@@ -208,8 +216,8 @@ const Login: React.FC = () => {
             </button>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <div className="text-center text-sm text-slate-500">
+          <div className="mt-8 pt-6 border-t border-secondary-200">
+            <div className="text-center text-sm text-secondary-500">
               <p>Hệ thống quản lý hợp đồng âm nhạc</p>
               <p className="mt-1">© 2025 VCPMC. All rights reserved.</p>
             </div>

@@ -71,26 +71,26 @@ const Modal: React.FC<ModalProps> = ({
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    xl: 'max-w-5xl'
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div 
         ref={modalRef}
-        className={`bg-white rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col`}
+        className={`modal-modern w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col animate-scale-in`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-secondary-200 bg-gradient-to-r from-secondary-50/50 to-white">
+          <h2 className="text-xl font-bold text-secondary-900">{title}</h2>
           <button 
             onClick={onClose}
-            className="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100"
+            className="p-2 text-secondary-500 hover:text-secondary-700 rounded-xl hover:bg-secondary-100 transition-all duration-200 hover:scale-105"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
         
-        <div className="flex-1 px-6 py-4 overflow-y-auto">
+        <div className="flex-1 px-6 py-5 overflow-y-auto scrollbar-modern">
           {children}
         </div>
       </div>

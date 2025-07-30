@@ -268,8 +268,8 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Cài đặt</h1>
-        <p className="text-slate-600 mt-1">Quản lý cài đặt hệ thống và tài khoản người dùng</p>
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Cài đặt</h1>
+        <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Quản lý cài đặt hệ thống và tài khoản người dùng</p>
       </div>
 
       {/* Settings Tabs */}

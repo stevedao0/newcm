@@ -31,7 +31,7 @@ const Button: React.FC<ButtonProps> = ({
     secondary: 'btn-secondary',
     success: 'btn-success',
     danger: 'btn-danger',
-    warning: 'bg-gradient-to-r from-warning-600 to-warning-700 text-white hover:from-warning-700 hover:to-warning-800 focus:ring-warning-500 shadow-soft hover:shadow-medium',
+    warning: 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white hover:from-yellow-700 hover:to-yellow-800 focus:ring-yellow-500 shadow-soft hover:shadow-medium',
     outline: 'btn-secondary',
   };
 

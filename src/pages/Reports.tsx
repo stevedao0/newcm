@@ -151,8 +151,8 @@ const Reports: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Báo cáo</h1>
-          <p className="text-slate-600 mt-1">Thống kê và phân tích dữ liệu hợp đồng</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Báo cáo</h1>
+          <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Thống kê và phân tích dữ liệu hợp đồng</p>
         </div>
         <div className="flex space-x-3">
           <Button 

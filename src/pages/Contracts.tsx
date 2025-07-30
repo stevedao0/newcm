@@ -380,8 +380,8 @@ const Contracts: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Quản lý Hợp đồng</h1>
-          <p className="text-slate-600 mt-1">Quản lý tất cả hợp đồng sao chép trực tuyến</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Quản lý Hợp đồng</h1>
+          <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Quản lý tất cả hợp đồng sao chép trực tuyến</p>
         </div>
         <div className="flex space-x-3">
           <div className="relative group">

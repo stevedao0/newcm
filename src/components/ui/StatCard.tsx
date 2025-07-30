@@ -32,7 +32,14 @@ const StatCard: React.FC<StatCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow duration-200">
+    <div 
+      className="rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow duration-200"
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        borderColor: 'var(--border-primary)',
+        color: 'var(--text-primary)'
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 ${colorClasses[color]} rounded-lg flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
@@ -42,8 +49,8 @@ const StatCard: React.FC<StatCardProps> = ({
         </span>
       </div>
       
-      <h3 className="text-slate-600 text-sm font-medium mb-1">{title}</h3>
-      <p className="text-3xl font-bold text-slate-900">{value}</p>
+      <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{title}</h3>
+      <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 };

@@ -23,14 +23,7 @@ const Card: React.FC<CardProps> = ({
   const hoverClasses = hover ? 'hover-lift' : '';
   
   return (
-    <div 
-      className={`${baseClasses} ${hoverClasses} overflow-hidden ${className}`}
-      style={{
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
-        borderColor: 'var(--border-primary)'
-      }}
-    >
+    <div className={`${baseClasses} ${hoverClasses} overflow-hidden ${className}`}>
       {children}
     </div>
   );

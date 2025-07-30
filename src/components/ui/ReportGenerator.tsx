@@ -39,7 +39,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   return (
     <Card className={`${className}`}>
       <CardHeader>
-        <h3 className="text-lg font-semibold text-slate-900">Tạo báo cáo</h3>
+        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Tạo báo cáo</h3>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">

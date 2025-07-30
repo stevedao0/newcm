@@ -646,8 +646,8 @@ const ImportData: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Nhập dữ liệu</h1>
-          <p className="text-slate-600 mt-1">Import và export dữ liệu hệ thống</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Nhập dữ liệu</h1>
+          <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Import và export dữ liệu hệ thống</p>
         </div>
       </div>
 

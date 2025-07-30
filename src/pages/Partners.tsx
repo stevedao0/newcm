@@ -336,8 +336,8 @@ const Partners: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Quản lý Đối tác</h1>
-          <p className="text-slate-600 mt-1">Quản lý thông tin đối tác và đơn vị hợp tác</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Quản lý Đối tác</h1>
+          <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Quản lý thông tin đối tác và đơn vị hợp tác</p>
         </div>
         <div className="flex space-x-3">
           <div className="relative group">

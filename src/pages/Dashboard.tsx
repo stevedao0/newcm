@@ -59,9 +59,9 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard</h1>
-        <p className="text-slate-600">Tổng quan hệ thống quản lý hợp đồng âm nhạc</p>
+      <div className="mb-8" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Dashboard</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Tổng quan hệ thống quản lý hợp đồng âm nhạc</p>
       </div>
 
       {/* Stats Grid */}

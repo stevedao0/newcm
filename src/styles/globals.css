@@ -8,48 +8,48 @@
 /* CSS Variables for theme system */
 :root {
   /* Light theme colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --bg-quaternary: #e2e8f0;
+  --bg-primary: #ffffff !important;
+  --bg-secondary: #f8fafc !important;
+  --bg-tertiary: #f1f5f9 !important;
+  --bg-quaternary: #e2e8f0 !important;
   
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-quaternary: #94a3b8;
+  --text-primary: #0f172a !important;
+  --text-secondary: #475569 !important;
+  --text-tertiary: #64748b !important;
+  --text-quaternary: #94a3b8 !important;
   
-  --border-primary: #e2e8f0;
-  --border-secondary: #cbd5e1;
+  --border-primary: #e2e8f0 !important;
+  --border-secondary: #cbd5e1 !important;
   
-  --accent-primary: #f97316;
-  --accent-secondary: #ea580c;
-  --accent-tertiary: #fb923c;
+  --accent-primary: #f97316 !important;
+  --accent-secondary: #ea580c !important;
+  --accent-tertiary: #fb923c !important;
   
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --shadow-color-strong: rgba(0, 0, 0, 0.15);
+  --shadow-color: rgba(0, 0, 0, 0.1) !important;
+  --shadow-color-strong: rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Dark theme colors */
 [data-theme="dark"] {
-  --bg-primary: #1e293b;
-  --bg-secondary: #0f172a;
-  --bg-tertiary: #334155;
-  --bg-quaternary: #475569;
+  --bg-primary: #1e293b !important;
+  --bg-secondary: #0f172a !important;
+  --bg-tertiary: #334155 !important;
+  --bg-quaternary: #475569 !important;
   
-  --text-primary: #f8fafc;
-  --text-secondary: #f1f5f9;
-  --text-tertiary: #e2e8f0;
-  --text-quaternary: #cbd5e1;
+  --text-primary: #f8fafc !important;
+  --text-secondary: #f1f5f9 !important;
+  --text-tertiary: #e2e8f0 !important;
+  --text-quaternary: #cbd5e1 !important;
   
-  --border-primary: #334155;
-  --border-secondary: #475569;
+  --border-primary: #334155 !important;
+  --border-secondary: #475569 !important;
   
-  --accent-primary: #fb923c;
-  --accent-secondary: #f97316;
-  --accent-tertiary: #fdba74;
+  --accent-primary: #fb923c !important;
+  --accent-secondary: #f97316 !important;
+  --accent-tertiary: #fdba74 !important;
   
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --shadow-color-strong: rgba(0, 0, 0, 0.5);
+  --shadow-color: rgba(0, 0, 0, 0.3) !important;
+  --shadow-color-strong: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Base styles */
@@ -61,20 +61,20 @@
   body {
     font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
   
   p {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     line-height: 1.6;
   }
   
@@ -98,16 +98,16 @@
 @layer components {
   /* Modern card system */
   .card-modern {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--border-primary) !important;
     @apply rounded-2xl overflow-hidden transition-all duration-300;
-    box-shadow: 0 2px 15px -3px var(--shadow-color), 0 10px 20px -2px var(--shadow-color);
+    box-shadow: 0 2px 15px -3px var(--shadow-color), 0 10px 20px -2px var(--shadow-color) !important;
   }
   
   .card-modern:hover {
     @apply transform -translate-y-1;
-    box-shadow: 0 4px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color);
+    box-shadow: 0 4px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color) !important;
   }
   
   .card-interactive {
@@ -210,18 +210,18 @@
   /* Modern inputs */
   .input-modern {
     @apply w-full px-4 py-3 text-sm border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
-    border-color: var(--border-secondary);
+    border-color: var(--border-secondary) !important;
   }
   
   .input-modern:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 20px rgba(251, 146, 60, 0.15);
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 20px rgba(251, 146, 60, 0.15) !important;
   }
   
   .input-modern:hover {
-    border-color: var(--border-primary);
+    border-color: var(--border-primary) !important;
   }
   
   .input-modern::placeholder {
@@ -231,7 +231,7 @@
   /* Modern select */
   .select-modern {
     @apply input-modern appearance-none bg-no-repeat bg-right bg-[length:16px_16px] pr-10;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
   }
   

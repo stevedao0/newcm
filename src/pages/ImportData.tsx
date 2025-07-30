@@ -518,13 +518,13 @@ const ImportData: React.FC = () => {
             email: '',
             website: '',
             soHopDongDaKy: 1,
-            tongDoanhThu: parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0,
+            tongDoanhThu: parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0,
             ghiChu: ''
           });
         } else {
           const partner = partnersMap.get(key)!;
           partner.soHopDongDaKy += 1;
-          partner.tongDoanhThu += parseInt(contract.mucNhuanBut.replace(/,/g, '')) || 0;
+          partner.tongDoanhThu += parseInt(String(contract.mucNhuanBut).replace(/,/g, '')) || 0;
         }
       });
       

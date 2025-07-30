@@ -17,22 +17,25 @@ export const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('vi-VN').format(num);
 };
 
-export const formatDate = (dateStr: string): string => {
+export const formatDate = (dateStr: string | number | Date): string => {
   if (!dateStr) return '';
   
+  // Convert to string first
+  const dateString = String(dateStr);
+  
   // Handle different date formats
-  if (dateStr.includes('/')) {
-    const parts = dateStr.split('/');
+  if (dateString.includes('/')) {
+    const parts = dateString.split('/');
     if (parts.length === 3) {
       // DD/MM/YYYY format
-      return dateStr;
+      return dateString;
     }
   }
   
   try {
     // ISO format
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
     
     return new Intl.DateTimeFormat('vi-VN', {
       day: '2-digit',
@@ -40,7 +43,7 @@ export const formatDate = (dateStr: string): string => {
       year: 'numeric'
     }).format(date);
   } catch (e) {
-    return dateStr;
+    return dateString;
   }
 };
 
